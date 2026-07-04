@@ -385,22 +385,37 @@ Foram aplicadas **três** técnicas (o desafio exige Few-shot + pelo menos uma a
 
 ## B) Resultados Finais
 
-> ⚠️ **Preencher após executar `python src/evaluate.py` com suas credenciais reais do LangSmith.** A avaliação usa LLM-as-Judge e requer `LANGSMITH_API_KEY` + a chave do provider (OpenAI ou Gemini) no `.env`.
+**Provider usado na avaliação:** Google Gemini (`gemini-2.5-flash` para responder e avaliar).
 
-- **Link público do dashboard LangSmith:** `<cole aqui o link do seu projeto/dataset>`
+- **Prompt público no Hub:** `juliano-eichelberger/bug_to_user_story_v2`
+  → https://smith.langchain.com/prompts/bug_to_user_story_v2
+- **Projeto/dataset no LangSmith:** https://smith.langchain.com/projects/prompt-optimization-challenge
+  (dataset `prompt-optimization-challenge-eval` com 15 exemplos)
 - **Screenshots das avaliações (≥ 0.8):** `<adicione as imagens em docs/ e referencie aqui>`
+
+### ✅ Resultado final: APROVADO — todas as 5 métricas ≥ 0.8
 
 ### Tabela comparativa v1 (ruim) × v2 (otimizado)
 
 | Métrica | v1 (baseline) | v2 (otimizado) | Meta |
 |---------|:-------------:|:--------------:|:----:|
-| Helpfulness | 0.45 ✗ | `<preencher>` | ≥ 0.8 |
-| Correctness | 0.52 ✗ | `<preencher>` | ≥ 0.8 |
-| F1-Score | 0.48 ✗ | `<preencher>` | ≥ 0.8 |
-| Clarity | 0.50 ✗ | `<preencher>` | ≥ 0.8 |
-| Precision | 0.46 ✗ | `<preencher>` | ≥ 0.8 |
+| Helpfulness | 0.45 ✗ | **0.96** ✓ | ≥ 0.8 |
+| Correctness | 0.52 ✗ | **0.89** ✓ | ≥ 0.8 |
+| F1-Score | 0.48 ✗ | **0.83** ✓ | ≥ 0.8 |
+| Clarity | 0.50 ✗ | **0.95** ✓ | ≥ 0.8 |
+| Precision | 0.46 ✗ | **0.96** ✓ | ≥ 0.8 |
+| **MÉDIA** | ~0.48 | **0.9176** | ≥ 0.8 |
 
-*(Valores de v1 são os ilustrativos do enunciado; os de v2 saem do `src/evaluate.py`.)*
+*(Valores de v1 são os ilustrativos do enunciado; os de v2 são reais, produzidos por `src/evaluate.py`.)*
+
+### Jornada de otimização (iterações)
+
+| Iteração | Mudança principal | F1-Score | Status |
+|----------|-------------------|:--------:|:------:|
+| **1** | Prompt v2 inicial: Role Prompting + Few-shot (2 ex.) + CoT + regra de complexidade | 0.77 ✗ | Reprovado (só F1 < 0.8) |
+| **2** | Foco em **recall**: reforço de completude (reafirmar dados técnicos, 5-6 critérios, seção "Exemplo de Cálculo") + 3º exemplo few-shot (bug médio com cálculo) | **0.83 ✓** | **Aprovado** |
+
+**Análise:** na iteração 1, Precision estava alta (0.95) mas F1 baixa (0.77) — sinal clássico de **recall baixo**: as respostas estavam corretas, porém omitiam informações presentes na referência (principalmente nos bugs médios com contexto técnico e cálculos). A iteração 2 instruiu o modelo a ser mais completo e adicionou um exemplo few-shot ancorando o padrão `Critérios + Exemplo de Cálculo + Contexto Técnico`, elevando o recall e, com ele, o F1-Score acima de 0.8.
 
 ### Principais mudanças do v1 → v2
 | Problema no v1 | Solução no v2 |
@@ -465,3 +480,12 @@ pytest tests/test_prompts.py -v
 ```
 
 **Saída esperada:** `6 passed`.
+
+### ⚠️ Nota para Windows (encoding)
+Os scripts imprimem emojis/símbolos (`✓`, `📊`). No console padrão do Windows (cp1252) isso
+pode gerar `UnicodeEncodeError`. Se ocorrer, force UTF-8 antes de rodar:
+```powershell
+$env:PYTHONIOENCODING = "utf-8"; $env:PYTHONUTF8 = "1"
+python src/evaluate.py
+```
+No Linux/Mac não é necessário.
